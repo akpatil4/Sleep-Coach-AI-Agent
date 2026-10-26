@@ -7,3 +7,5 @@ pandas
 numpy
 pytest
 scikit-learn
+JayDeBeApi
+JPype1
