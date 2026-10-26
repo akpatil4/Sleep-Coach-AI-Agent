@@ -1,6 +1,7 @@
 # Tests the agent loop with a FAKE model. This fake exists only in tests; the app
 # itself always calls the real model through app/llm.py.
 import json
+import re
 import numpy as np
 import pandas as pd
 from app.agents import run_agents
@@ -34,9 +35,9 @@ class FakeLLM:
         if "Planner" in system:
             return {"content": json.dumps({"tools": ["sleep_stats", "sleep_debt",
                     "rank_experiments"], "focus": "test"}), "model": "fake-model"}
-        evidence = json.loads(user.split("EVIDENCE:\n")[1])
-        ranked = evidence.get("ranking", {}).get("ranked", [])
-        top = ranked[0]["experiment"] if ranked else ""
+        body = user.split("EVIDENCE:\n")[1]
+        found = re.search(r"Suggested experiment \(quote exactly\): (.+)", body)
+        top = found.group(1).strip() if found else ""
         text = (self.drafts.pop(0) if self.drafts else GOOD).replace("{top}", top)
         return {"content": text, "model": "fake-model"}
 
@@ -88,3 +89,18 @@ def test_session_two_records_result_and_skips_tested_habit(tmp_path):
                        make_hmem(tmp_path, "r2"), "t-6", llm=FakeLLM([GOOD]))
     ranked = again["result"]["evidence"]["ranking"]["ranked"]
     assert all(row["habit"] != "screen_min" for row in ranked)
+
+class Reject502(Exception):
+    status_code = 502
+
+
+def test_draft_retries_with_less_evidence_when_nightshift_rejects(tmp_path):
+    inner = FakeLLM([GOOD])
+
+    def picky(messages, temperature=0.2):
+        if "Planner" not in messages[0]["content"] and "Nights analysed" in messages[1]["content"]:
+            raise Reject502("rejected")
+        return inner(messages, temperature)
+
+    out = run_agents("Why was my sleep bad?", {}, make_df(), make_hmem(tmp_path), "t-7", llm=picky)
+    assert out["status"] == "success"

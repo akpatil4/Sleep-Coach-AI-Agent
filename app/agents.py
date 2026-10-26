@@ -1,6 +1,7 @@
 # Planner -> Executor -> Evaluator, with a revision loop and H-MEM memory.
 import json
 import re
+from pathlib import Path
 from datetime import date
 
 from app import tools
@@ -63,6 +64,56 @@ def memory_block(payload):
                  for m in payload["memories"]]
         return "Relevant past experiments and findings:\n" + "\n".join(lines)
     return "No relevant past experiments were found."
+
+
+def evidence_text(evidence):
+    """Plain sentences instead of JSON. Nightshift rejected the JSON ranking block."""
+    lines = []
+    s = evidence.get("sleep_stats")
+    if s:
+        lines.append(
+            f"Nights analysed: {s['nights']}. Average sleep: {s['avg_duration_h']} hours. "
+            f"Average quality rating: {s['avg_quality']}. "
+            f"Number of short nights: {s['nights_under_7h']}. "
+            f"Bedtime varies by {s['bedtime_std_min']} minutes.")
+    d = evidence.get("sleep_debt")
+    if d:
+        lines.append(f"Sleep debt over the last {d['window_nights']} nights against a "
+                     f"{d['target_h']} hour target: {d['debt_h']} hours.")
+    ranked = evidence.get("ranking", {}).get("ranked", [])
+    if ranked:
+        t = ranked[0]
+        lines.append(f"Habit most linked with worse sleep: {t['habit']}, correlation {t['r']}, "
+                     f"p-value {t['p_value']}, which is {t['label']}.")
+        lines.append(f"Suggested experiment (quote exactly): {t['experiment']}")
+    chk = evidence.get("experiment_check")
+    if chk:
+        ba = chk["before_after"]
+        if "change" in ba:
+            lines.append(
+                f"Experiment on {chk.get('habit')}: nights before {ba['n_before']}, "
+                f"nights after {ba['n_after']}. Sleep quality change {ba['change']}, "
+                f"confidence interval {ba['ci95'][0]} to {ba['ci95'][1]}. "
+                f"{ba['label']}. {ba['caution']}")
+        else:
+            lines.append(f"Experiment check: {ba.get('label')}.")
+    return "\n".join(lines)
+
+
+
+def evidence_levels(evidence):
+    """Evidence text at decreasing size, so a rejected prompt can retry with less."""
+    lines = evidence_text(evidence).split("\n")
+    keep = ("Habit most linked", "Suggested experiment", "Experiment on", "Experiment check")
+    core = [ln for ln in lines if ln.startswith(keep)]
+    levels = ["\n".join(lines),
+              "\n".join(ln for ln in lines if not ln.startswith("Sleep debt")),
+              "\n".join(core)]
+    unique = []
+    for lv in levels:
+        if lv and lv not in unique:
+            unique.append(lv)
+    return unique
 
 
 def tested_habits(hmem):
@@ -179,20 +230,36 @@ class ExecutorAgent:
             "recompute numbers, and do not use percentages.\n"
             "- State how strong the evidence is, using the labels in the EVIDENCE "
             "(for example 'could be noise').\n"
-            "- Describe associations only. Never claim that one thing causes another.\n"
-            "- If the EVIDENCE has a ranking, propose the top-ranked experiment and quote "
-            "its text exactly.\n"
+            "- Say that a habit is linked with worse sleep. Do not say it is the reason.\n"
+            "- Copy the suggested experiment sentence from the EVIDENCE word for word.\n"
             "- If the EVIDENCE has experiment_check, report what happened and say it is "
             "not proof of cause.\n"
             "- If relevant past experiments are listed, refer to them.\n"
             "- Give no medical advice or diagnoses. Do not number your points.")
-        user = f"Question: {question}\n\n{memory_block(mem)}\n\nPlan focus: {plan['focus']}"
+        user = f"Question: {question}\n\n{memory_block(mem)}"
         if issues:
             user += ("\n\nYour previous draft:\n" + (previous or "") +
                      "\n\nFix these issues and rewrite:\n- " + "\n- ".join(issues))
-        user += "\n\nEVIDENCE:\n" + json.dumps(evidence, default=str)
-        reply = self.llm([{"role": "system", "content": system},
-                          {"role": "user", "content": user}])
+        base_user = user
+        reply, last_exc = None, None
+        for level, ev in enumerate(evidence_levels(evidence)):
+            user = base_user + "\n\nEVIDENCE:\n" + ev
+            try:
+                reply = self.llm([{"role": "system", "content": system},
+                                  {"role": "user", "content": user}])
+                break
+            except Exception as exc:
+                if getattr(exc, "status_code", None) != 502:
+                    raise
+                last_exc = exc
+                Path("logs").mkdir(exist_ok=True)
+                Path("logs/rejected_prompt.txt").write_text(system + "\n\n" + user)
+                log_event(self.trace_id, self.name, "draft_prompt_rejected",
+                          input_summary=f"evidence level {level}, {len(user)} chars",
+                          output_summary="Nightshift returned 502, retrying with less evidence",
+                          retry_count=revision, status="retry")
+        if reply is None:
+            raise last_exc
         self.models.add(reply["model"])
         log_event(self.trace_id, self.name, "revise_draft" if issues else "write_draft",
                   model=reply["model"], retry_count=revision,

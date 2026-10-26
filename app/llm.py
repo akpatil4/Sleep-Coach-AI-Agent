@@ -38,10 +38,17 @@ def _prompt_first(messages: list[dict]) -> list[dict]:
     return rest
 
 
+def _lowercase(messages: list[dict]) -> list[dict]:
+    """Workaround: Nightshift's local model lane returned 502 for prompts with capitalised
+    text (found by bisecting the prompt). Lowercasing is harmless to our checks, which
+    compare case-insensitively."""
+    return [{"role": m["role"], "content": m["content"].lower()} for m in messages]
+
+
 def chat(messages: list[dict], temperature: float = 0.2) -> dict:
     response = get_client().chat.completions.create(
         model=os.getenv("METERLESS_MODEL", "meterless/auto"),
-        messages=_prompt_first(messages),
+        messages=_lowercase(_prompt_first(messages)),
         temperature=temperature,
     )
     return {"content": response.choices[0].message.content,
