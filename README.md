@@ -1,6 +1,18 @@
 # Sleep Experiment Coach
 
-An agent that looks at a person's sleep log, ranks which habit to test next, and checks its own numbers before answering. Built solo for the Open Agent Hackathon 2026 (Track 2).
+A sleep-habit coach that helps one person decide **what to try next**, and checks its own numbers before it answers.
+
+Most sleep trackers show log charts but don't say which habit is worth changing. You ask this agent a question, such as "Which habit should I test next to sleep better?". It then:
+
+1. **Analyses your sleep log:** average sleep, sleep debt, and how strongly each habit (screen time, caffeine, bedtime) goes with how well you slept, including whether that pattern could be chance or a cause.
+2. **Ranks one habit to test next,** skipping habits you've already tested.
+3. **Checks the result of an experiment,** for example "did cutting screen time help?", with a confidence range and a plain statement of how weak or strong the evidence is.
+4. **Checks itself.** The statistics are done by ordinary code, and the AI model only plans and writes up the findings. A separate code-based Evaluator rejects any draft with a number that isn't in the real results, or with wording that claims one thing causes another.
+5. **Remembers** what you've tested, so the next answer changes.
+
+It gives suggestions for experiments, not medical advice, and every report says so.
+
+Built solo for the Open Agent Hackathon 2026 (Track 2). All data in this repository is synthetic.
 
 **All data is synthetic.** This is not a medical tool.
 
