@@ -57,4 +57,4 @@ FastAPI, uvicorn, scikit-learn, JayDeBeApi, JPype1, openai client (see `requirem
 - Zetaris holds a single table, so its federation features aren't exercised.
 - The first model lane (local Llama 1B) returned 502 errors; request-rewriting workarounds (including lowercasing) remain in `app/llm.py`.
 - The safety gate is keyword-based.
-- `scripts/demo_offline.py` is an outdated stand-in-model demo.
+- `demo/demo_offline.py` is an outdated stand-in-model demo.
