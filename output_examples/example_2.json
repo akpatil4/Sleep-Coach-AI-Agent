@@ -1,6 +1,6 @@
 {
   "request_id": "example-2",
-  "trace_id": "trace-20261027-000953-c90571",
+  "trace_id": "trace-20261027-001310-4b0973",
   "data_source": "zetaris",
   "status": "success",
   "agents_used": [
@@ -9,7 +9,7 @@
     "EvaluatorAgent"
   ],
   "result": {
-    "report": "Over 97 nights, you averaged 8.02 hours of sleep with an average quality rating of 6.54. You experienced 11 short nights, and your bedtime varied by 29 minutes.\n\nRegarding your screen time experiment, you recorded 90 nights before the change and 7 nights after. The sleep quality change was 0.916, with a confidence interval of 0.378 to 1.415. This change is unlikely to be noise alone, but because there were fewer than 14 nights after the change, this is weak evidence and is not proof of cause. Screen time is linked with worse sleep. No relevant past experiments were found to compare against these results.\n\nNo screens in the last minutes before bed.\n\nGeneral wellbeing information only, not medical advice. If you have serious or persistent symptoms, see a doctor.",
+    "report": "Regarding your experiment on screen_min, you recorded 90 nights before and 7 nights after the change. Your sleep quality changed by 0.916, with a confidence interval of 0.378 to 1.415. While this change is unlikely to be noise alone, it is not proof of cause, and because you recorded fewer than 14 nights after the change, there is weak evidence.\n\nYour data from 97 nights shows an average sleep of 8.02 hours and an average quality rating of 6.54. You had 11 short nights and your bedtime varies by 29 minutes. Your sleep debt over the last 7 nights against a 8.0 hour target is 1.07 hours. The habit most linked with worse sleep is bed_hour, with a correlation of -0.297 and a p-value of 0.0045, which is strong evidence of an association.\n\ngo to bed 30 minutes earlier\n\nGeneral wellbeing information only, not medical advice. If you have serious or persistent symptoms, see a doctor.",
     "evidence": {
       "sleep_stats": {
         "nights": 97,
@@ -17,6 +17,46 @@
         "bedtime_std_min": 29,
         "avg_quality": 6.54,
         "nights_under_7h": 11
+      },
+      "sleep_debt": {
+        "target_h": 8.0,
+        "window_nights": 7,
+        "debt_h": 1.07
+      },
+      "ranking": {
+        "ranked": [
+          {
+            "habit": "bed_hour",
+            "experiment": "Go to bed 30 minutes earlier",
+            "r": -0.297,
+            "p_value": 0.0045,
+            "label": "strong evidence of an association",
+            "score": 0.296
+          },
+          {
+            "habit": "last_caffeine_hour",
+            "experiment": "No caffeine after 2pm",
+            "r": -0.242,
+            "p_value": 0.031,
+            "label": "moderate evidence of an association",
+            "score": 0.234
+          },
+          {
+            "habit": "caffeine_cups",
+            "experiment": "Cap caffeine at 2 cups a day",
+            "r": -0.062,
+            "p_value": 0.5167,
+            "label": "could be noise",
+            "score": 0.03
+          }
+        ],
+        "skipped": [
+          {
+            "habit": "screen_min",
+            "reason": "already tested"
+          }
+        ],
+        "note": "We test several habits, so one 'moderate' result could be luck. Habits can also be linked (e.g. screen time and bedtime), so the top habit may be standing in for another."
       },
       "experiment_check": {
         "habit": "screen_min",
@@ -66,23 +106,23 @@
     "plan": {
       "tools": [
         "sleep_stats",
-        "compare_periods"
+        "sleep_debt",
+        "compare_periods",
+        "rank_experiments"
       ],
-      "focus": "Analyze the impact of reduced screen time on sleep metrics by comparing the periods before and after the intervention to determine efficacy and inform future adjustments.",
+      "focus": "Analyze the impact of the screen time experiment on sleep quality and debt to determine its effectiveness and identify the next most promising intervention.",
       "fallback_used": false
     }
   },
   "collaboration": {
     "feedback_loop_completed": true,
-    "revision_count": 1,
-    "evaluator_findings": [
-      "The number 60 does not appear in the evidence. Remove it or use a number from the evidence."
-    ],
+    "revision_count": 0,
+    "evaluator_findings": [],
     "final_issues": []
   },
   "memory": {
-    "retrieved": 0,
-    "retrieval_reason": "0 of 1 memories above threshold 0.05"
+    "retrieved": 1,
+    "retrieval_reason": "1 of 2 memories above threshold 0.05"
   },
   "models_used": [
     "gemini-3.1-flash-lite"

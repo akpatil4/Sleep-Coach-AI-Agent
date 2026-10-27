@@ -1,6 +1,6 @@
 {
   "request_id": "example-1",
-  "trace_id": "trace-20261027-000936-57701f",
+  "trace_id": "trace-20261027-001305-761a0c",
   "data_source": "zetaris",
   "status": "success",
   "agents_used": [
@@ -9,7 +9,7 @@
     "EvaluatorAgent"
   ],
   "result": {
-    "report": "Based on the analysis of 97 nights, your average sleep is 8.02 hours with an average quality rating of 6.54. You experienced 11 short nights and your bedtime varies by 29 minutes. Your sleep debt over the last 7 nights against a 8.0 hour target is 1.07 hours.\n\nNo relevant past experiments were found to guide your next steps. While the provided data tracks your sleep duration and quality, it does not identify a specific habit linked with worse sleep. Without a correlation coefficient or p-value provided in the evidence, any identified association could be noise. \n\nNo suggested experiment was provided in the evidence. Please continue tracking your habits to gather the data necessary to identify potential links to your sleep quality.\n\nGeneral wellbeing information only, not medical advice. If you have serious or persistent symptoms, see a doctor.",
+    "report": "Based on the analysis of 97 nights, your average sleep duration is 8.02 hours with an average quality rating of 6.54. You experienced 11 short nights and a bedtime variation of 29 minutes. Your sleep debt over the last 7 nights against a 8.0 hour target is 1.07 hours.\n\nThe habit most linked with worse sleep is screen_min, which has a correlation of -0.611 and a p-value of 0.0005. This is strong evidence of an association. Please note that this is an association and not a cause-and-effect relationship. No relevant past experiments were found.\n\nTo explore this further, your suggested experiment is: no screens in the last 60 minutes before bed.\n\nGeneral wellbeing information only, not medical advice. If you have serious or persistent symptoms, see a doctor.",
     "evidence": {
       "sleep_stats": {
         "nights": 97,
@@ -22,12 +22,51 @@
         "target_h": 8.0,
         "window_nights": 7,
         "debt_h": 1.07
+      },
+      "ranking": {
+        "ranked": [
+          {
+            "habit": "screen_min",
+            "experiment": "No screens in the last 60 minutes before bed",
+            "r": -0.611,
+            "p_value": 0.0005,
+            "label": "strong evidence of an association",
+            "score": 0.611
+          },
+          {
+            "habit": "bed_hour",
+            "experiment": "Go to bed 30 minutes earlier",
+            "r": -0.297,
+            "p_value": 0.0045,
+            "label": "strong evidence of an association",
+            "score": 0.296
+          },
+          {
+            "habit": "last_caffeine_hour",
+            "experiment": "No caffeine after 2pm",
+            "r": -0.242,
+            "p_value": 0.031,
+            "label": "moderate evidence of an association",
+            "score": 0.234
+          },
+          {
+            "habit": "caffeine_cups",
+            "experiment": "Cap caffeine at 2 cups a day",
+            "r": -0.062,
+            "p_value": 0.5167,
+            "label": "could be noise",
+            "score": 0.03
+          }
+        ],
+        "skipped": [],
+        "note": "We test several habits, so one 'moderate' result could be luck. Habits can also be linked (e.g. screen time and bedtime), so the top habit may be standing in for another."
       }
     },
     "plan": {
       "tools": [
         "sleep_stats",
-        "sleep_debt"
+        "sleep_debt",
+        "rank_experiments"
       ],
       "focus": "Analyze current sleep patterns and deficits to identify the most impactful area for improvement before selecting a new habit to test.",
       "fallback_used": false

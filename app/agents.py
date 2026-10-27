@@ -148,6 +148,8 @@ class PlannerAgent:
         fallback = not chosen
         if fallback:
             chosen = list(DEFAULT_TOOLS)
+        if "rank_experiments" not in chosen:
+            chosen.append("rank_experiments")
         if context.get("experiment_start") and "compare_periods" not in chosen:
             chosen.append("compare_periods")
         if not context.get("experiment_start"):
@@ -296,10 +298,10 @@ class EvaluatorAgent:
     def __init__(self, trace_id):
         self.trace_id = trace_id
 
-    def review(self, draft, evidence, question, context, revision=0):
+    def review(self, draft, evidence, question, context, revision=0, memory_text=""):
         issues = []
         blob = json.dumps(evidence, default=str) + " " + question + " " + \
-            json.dumps(context, default=str)
+            json.dumps(context, default=str) + " " + memory_text
         allowed = [float(x) for x in _numbers(blob)]
         for tok in dict.fromkeys(_numbers(draft)):
             if not _supported(tok, allowed):
@@ -333,16 +335,17 @@ def run_agents(question, context, df, hmem, trace_id, llm=default_chat):
     evaluator = EvaluatorAgent(trace_id)
 
     plan, mem = planner.plan(question, context)
+    past = memory_block(mem)
     evidence = executor.run_tools(plan, df, context, tested_habits(hmem))
     draft = executor.draft(question, mem, evidence, plan)
-    review = evaluator.review(draft, evidence, question, context)
+    review = evaluator.review(draft, evidence, question, context, memory_text=past)
     findings, revisions = [], 0
     while review["requires_revision"] and revisions < MAX_REVISIONS:
         findings.extend(review["issues"])
         revisions += 1
         draft = executor.draft(question, mem, evidence, plan, issues=review["issues"],
                                previous=draft, revision=revisions)
-        review = evaluator.review(draft, evidence, question, context, revision=revisions)
+        review = evaluator.review(draft, evidence, question, context, memory_text=past, revision=revisions)
     approved = not review["requires_revision"]
     report = planner.finalise(draft, evidence, context, approved, revisions)
     log_event(trace_id, planner.name, "final_response",
