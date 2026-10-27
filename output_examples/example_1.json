@@ -1,0 +1,49 @@
+{
+  "request_id": "example-1",
+  "trace_id": "trace-20261027-000936-57701f",
+  "data_source": "zetaris",
+  "status": "success",
+  "agents_used": [
+    "PlannerAgent",
+    "ExecutorAgent",
+    "EvaluatorAgent"
+  ],
+  "result": {
+    "report": "Based on the analysis of 97 nights, your average sleep is 8.02 hours with an average quality rating of 6.54. You experienced 11 short nights and your bedtime varies by 29 minutes. Your sleep debt over the last 7 nights against a 8.0 hour target is 1.07 hours.\n\nNo relevant past experiments were found to guide your next steps. While the provided data tracks your sleep duration and quality, it does not identify a specific habit linked with worse sleep. Without a correlation coefficient or p-value provided in the evidence, any identified association could be noise. \n\nNo suggested experiment was provided in the evidence. Please continue tracking your habits to gather the data necessary to identify potential links to your sleep quality.\n\nGeneral wellbeing information only, not medical advice. If you have serious or persistent symptoms, see a doctor.",
+    "evidence": {
+      "sleep_stats": {
+        "nights": 97,
+        "avg_duration_h": 8.02,
+        "bedtime_std_min": 29,
+        "avg_quality": 6.54,
+        "nights_under_7h": 11
+      },
+      "sleep_debt": {
+        "target_h": 8.0,
+        "window_nights": 7,
+        "debt_h": 1.07
+      }
+    },
+    "plan": {
+      "tools": [
+        "sleep_stats",
+        "sleep_debt"
+      ],
+      "focus": "Analyze current sleep patterns and deficits to identify the most impactful area for improvement before selecting a new habit to test.",
+      "fallback_used": false
+    }
+  },
+  "collaboration": {
+    "feedback_loop_completed": true,
+    "revision_count": 0,
+    "evaluator_findings": [],
+    "final_issues": []
+  },
+  "memory": {
+    "retrieved": 0,
+    "retrieval_reason": "no memories stored"
+  },
+  "models_used": [
+    "gemini-3.1-flash-lite"
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "request_id": "example-2",
+  "trace_id": "trace-20261027-000953-c90571",
+  "data_source": "zetaris",
+  "status": "success",
+  "agents_used": [
+    "PlannerAgent",
+    "ExecutorAgent",
+    "EvaluatorAgent"
+  ],
+  "result": {
+    "report": "Over 97 nights, you averaged 8.02 hours of sleep with an average quality rating of 6.54. You experienced 11 short nights, and your bedtime varied by 29 minutes.\n\nRegarding your screen time experiment, you recorded 90 nights before the change and 7 nights after. The sleep quality change was 0.916, with a confidence interval of 0.378 to 1.415. This change is unlikely to be noise alone, but because there were fewer than 14 nights after the change, this is weak evidence and is not proof of cause. Screen time is linked with worse sleep. No relevant past experiments were found to compare against these results.\n\nNo screens in the last minutes before bed.\n\nGeneral wellbeing information only, not medical advice. If you have serious or persistent symptoms, see a doctor.",
+    "evidence": {
+      "sleep_stats": {
+        "nights": 97,
+        "avg_duration_h": 8.02,
+        "bedtime_std_min": 29,
+        "avg_quality": 6.54,
+        "nights_under_7h": 11
+      },
+      "experiment_check": {
+        "habit": "screen_min",
+        "before_after": {
+          "metric": "sleep_quality",
+          "n_before": 90,
+          "n_after": 7,
+          "change": 0.916,
+          "ci95": [
+            0.378,
+            1.415
+          ],
+          "label": "change unlikely to be noise alone (still not proof the habit caused it)",
+          "caution": "Fewer than 14 nights after the change: weak evidence.",
+          "note": "Uncontrolled before/after; other things changed too."
+        },
+        "period_means": {
+          "split_date": "2026-09-29",
+          "n_before": 90,
+          "n_after": 7,
+          "metrics": {
+            "sleep_quality": {
+              "before": 6.47,
+              "after": 7.39,
+              "change": 0.92
+            },
+            "duration_h": {
+              "before": 7.98,
+              "after": 8.53,
+              "change": 0.55
+            },
+            "screen_min": {
+              "before": 78.36,
+              "after": 13.71,
+              "change": -64.64
+            },
+            "mood": {
+              "before": 5.56,
+              "after": 5.61,
+              "change": 0.05
+            }
+          },
+          "caution": "Fewer than 14 nights after the change: weak evidence."
+        }
+      }
+    },
+    "plan": {
+      "tools": [
+        "sleep_stats",
+        "compare_periods"
+      ],
+      "focus": "Analyze the impact of reduced screen time on sleep metrics by comparing the periods before and after the intervention to determine efficacy and inform future adjustments.",
+      "fallback_used": false
+    }
+  },
+  "collaboration": {
+    "feedback_loop_completed": true,
+    "revision_count": 1,
+    "evaluator_findings": [
+      "The number 60 does not appear in the evidence. Remove it or use a number from the evidence."
+    ],
+    "final_issues": []
+  },
+  "memory": {
+    "retrieved": 0,
+    "retrieval_reason": "0 of 1 memories above threshold 0.05"
+  },
+  "models_used": [
+    "gemini-3.1-flash-lite"
+  ]
+}

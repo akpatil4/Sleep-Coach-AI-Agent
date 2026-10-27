@@ -1,0 +1,8 @@
+{
+  "request_id": "example-2",
+  "user_query": "Did cutting screen time help, and what should I try next?",
+  "context": {
+    "experiment_start": "2026-09-29",
+    "experiment_habit": "screen_min"
+  }
+}

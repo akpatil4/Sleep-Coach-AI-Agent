@@ -241,22 +241,45 @@ class ExecutorAgent:
             user += ("\n\nYour previous draft:\n" + (previous or "") +
                      "\n\nFix these issues and rewrite:\n- " + "\n- ".join(issues))
         base_user = user
+        facts_levels = evidence_levels(evidence)
+        extra = ""
+        if issues:
+            extra = ("\n\nyour previous draft:\n" + (previous or "") +
+                     "\n\nfix these issues and rewrite:\n- " + "\n- ".join(issues))
+        past = memory_block(mem)
+
+        def soft(facts):
+            return (f"{past}\n\nfacts about one person's sleep:\n{facts}\n\n"
+                    f"using these facts, write a short report (under 150 words) that answers: "
+                    f"{question} mention the sleep numbers, the habit most linked with worse "
+                    f"sleep, and the suggested experiment. describe the habit as linked with "
+                    f"worse sleep, and say this is an association, not proof." + extra)
+
+        variants = [
+            ("full rules", [{"role": "system", "content": system},
+                            {"role": "user", "content": base_user + "\n\nEVIDENCE:\n" + facts_levels[0]}]),
+            ("plain request", [{"role": "user", "content": soft(facts_levels[0])}]),
+            ("plain request, core facts", [{"role": "user", "content": soft(facts_levels[-1])}]),
+            ("minimal", [{"role": "user", "content": facts_levels[-1] +
+                          "\n\nwrite three short sentences about these facts, including the suggested experiment." + extra}]),
+        ]
         reply, last_exc = None, None
-        for level, ev in enumerate(evidence_levels(evidence)):
-            user = base_user + "\n\nEVIDENCE:\n" + ev
+        for label, msgs in variants:
             try:
-                reply = self.llm([{"role": "system", "content": system},
-                                  {"role": "user", "content": user}])
+                reply = self.llm(msgs)
+                log_event(self.trace_id, self.name, "draft_prompt_accepted",
+                          input_summary=f"variant: {label}", retry_count=revision)
                 break
             except Exception as exc:
                 if getattr(exc, "status_code", None) != 502:
                     raise
                 last_exc = exc
                 Path("logs").mkdir(exist_ok=True)
-                Path("logs/rejected_prompt.txt").write_text(system + "\n\n" + user)
+                Path("logs/rejected_prompt.txt").write_text(
+                    "\n\n-----\n\n".join(m["content"] for m in msgs))
                 log_event(self.trace_id, self.name, "draft_prompt_rejected",
-                          input_summary=f"evidence level {level}, {len(user)} chars",
-                          output_summary="Nightshift returned 502, retrying with less evidence",
+                          input_summary=f"variant: {label}",
+                          output_summary="Nightshift returned 502, trying a simpler prompt",
                           retry_count=revision, status="retry")
         if reply is None:
             raise last_exc

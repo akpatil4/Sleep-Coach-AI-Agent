@@ -31,11 +31,11 @@ class FakeLLM:
         self.drafts = list(drafts)
 
     def __call__(self, messages, temperature=0.2):
-        system, user = messages[0]["content"], messages[1]["content"]
+        system, user = messages[0]["content"], messages[-1]["content"]
         if "Planner" in system:
             return {"content": json.dumps({"tools": ["sleep_stats", "sleep_debt",
                     "rank_experiments"], "focus": "test"}), "model": "fake-model"}
-        body = user.split("EVIDENCE:\n")[1]
+        body = user.split("EVIDENCE:\n")[-1]
         found = re.search(r"Suggested experiment \(quote exactly\): (.+)", body)
         top = found.group(1).strip() if found else ""
         text = (self.drafts.pop(0) if self.drafts else GOOD).replace("{top}", top)
@@ -98,7 +98,7 @@ def test_draft_retries_with_less_evidence_when_nightshift_rejects(tmp_path):
     inner = FakeLLM([GOOD])
 
     def picky(messages, temperature=0.2):
-        if "Planner" not in messages[0]["content"] and "Nights analysed" in messages[1]["content"]:
+        if len(messages) == 2 and "Planner" not in messages[0]["content"] and "Nights analysed" in messages[-1]["content"]:
             raise Reject502("rejected")
         return inner(messages, temperature)
 
